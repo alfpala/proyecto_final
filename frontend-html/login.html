@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MarketTech — Iniciar Sesión</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body style="background:linear-gradient(135deg,#1e40af 0%,#7c3aed 100%);min-height:100vh;display:flex;flex-direction:column;">
+<nav class="navbar navbar-dark px-4 py-3">
+  <a class="navbar-brand fw-bold" href="index.html">Market<span style="color:#f59e0b">Tech</span></a>
+</nav>
+
+<main class="flex-grow-1 d-flex align-items-center justify-content-center py-5 px-3">
+  <div style="width:100%;max-width:440px">
+    <div class="card auth-card p-4 p-md-5">
+      <div class="text-center mb-4">
+        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px">
+          <i class="bi bi-person-fill text-white fs-3"></i>
+        </div>
+        <h2 class="fw-bold">Iniciar Sesión</h2>
+        <p class="text-muted small">¿No tienes cuenta? <a href="register.html" class="text-primary">Regístrate gratis</a></p>
+      </div>
+
+      <div id="alertBox" class="alert d-none" role="alert"></div>
+
+      <form id="loginForm" novalidate>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Correo electrónico</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+            <input type="email" id="email" class="form-control" placeholder="tu@email.com" required/>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Contraseña</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+            <input type="password" id="password" class="form-control" placeholder="••••••••" required/>
+            <button type="button" class="btn btn-outline-secondary" id="togglePwd">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+        </div>
+        <button type="submit" id="submitBtn" class="btn btn-gradient w-100 py-2 fw-semibold fs-5">
+          <span id="btnText">Iniciar Sesión</span>
+          <span id="btnSpinner" class="spinner-border spinner-border-sm d-none ms-2"></span>
+        </button>
+      </form>
+
+      <div class="text-center mt-4">
+        <small class="text-muted">¿Olvidaste tu contraseña? <a href="#" class="text-primary">Recuperar</a></small>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="text-center text-white-50 py-3 small">
+  &copy; 2026 MarketTech - alfpala@gmail.com — <a href="https://wa.me/3204567890" target="_blank" class="text-white-50"><i class="bi bi-whatsapp me-1"></i>Soporte por WhatsApp</a>
+</footer>
+
+<div id="toast-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+import { authAPI, Auth, toast } from "./js/api.js";
+
+if (Auth.isLoggedIn()) window.location.href = "index.html";
+
+document.getElementById("togglePwd").addEventListener("click", () => {
+  const pwd = document.getElementById("password");
+  const icon = document.querySelector("#togglePwd i");
+  if (pwd.type === "password") { pwd.type = "text"; icon.className = "bi bi-eye-slash"; }
+  else { pwd.type = "password"; icon.className = "bi bi-eye"; }
+});
+
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email    = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const btn      = document.getElementById("submitBtn");
+  const spinner  = document.getElementById("btnSpinner");
+  const alert    = document.getElementById("alertBox");
+
+  if (!email || !password) {
+    alert.className = "alert alert-warning"; alert.textContent = "Completa todos los campos."; alert.classList.remove("d-none");
+    return;
+  }
+
+  btn.disabled = true; spinner.classList.remove("d-none");
+
+  try {
+    const data = await authAPI.login({ email, password });
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+    toast("¡Bienvenido " + data.user.name + "!", "success");
+    setTimeout(() => window.location.href = "index.html", 800);
+  } catch (err) {
+    alert.className = "alert alert-danger";
+    alert.textContent = err.message || "Error al iniciar sesión";
+    alert.classList.remove("d-none");
+  } finally {
+    btn.disabled = false; spinner.classList.add("d-none");
+  }
+});
+</script>
+</body>
+</html>

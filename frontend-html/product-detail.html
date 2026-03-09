@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MarketTech — Detalle del Producto</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body>
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark" style="background:linear-gradient(135deg,#1e293b,#2563eb)">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="index.html">Market<span style="color:#f59e0b">Tech</span></a>
+    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="nav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house me-1"></i>Inicio</a></li>
+        <li class="nav-item"><a class="nav-link" href="products.html"><i class="bi bi-grid me-1"></i>Productos</a></li>
+        <li class="nav-item d-none" id="nav-myproducts"><a class="nav-link" href="my-products.html"><i class="bi bi-box me-1"></i>Mis Productos</a></li>
+        <li class="nav-item d-none" id="nav-fav"><a class="nav-link" href="favorites.html"><i class="bi bi-heart me-1"></i>Favoritos</a></li>
+        <li class="nav-item d-none" id="nav-orders"><a class="nav-link" href="orders.html"><i class="bi bi-receipt me-1"></i>Mis Pedidos</a></li>
+      </ul>
+      <ul class="navbar-nav align-items-center gap-1">
+        <li class="nav-item d-none" id="nav-cart-wrap">
+          <a href="cart.html" class="nav-link position-relative">
+            <i class="bi bi-cart3 fs-5"></i>
+            <span id="cart-count" class="badge bg-danger badge-cart" style="display:none">0</span>
+          </a>
+        </li>
+        <li class="nav-item" id="nav-auth"><a class="nav-link" href="login.html"><i class="bi bi-person me-1"></i>Iniciar sesión</a></li>
+        <li class="nav-item d-none"><span class="nav-link text-warning fw-semibold" id="nav-user"></span></li>
+        <li class="nav-item d-none" id="nav-logout"><a href="#" class="btn btn-sm btn-outline-light ms-1"><i class="bi bi-box-arrow-right me-1"></i>Salir</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-5">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="index.html">Inicio</a></li>
+      <li class="breadcrumb-item"><a href="products.html">Productos</a></li>
+      <li class="breadcrumb-item active" id="breadcrumbProduct">Cargando…</li>
+    </ol>
+  </nav>
+
+  <!-- Carga de skeleton -->
+  <div id="skeleton" class="row g-5">
+    <div class="col-md-6">
+      <div class="skeleton" style="height:450px;border-radius:12px"></div>
+    </div>
+    <div class="col-md-6">
+      <div class="skeleton mb-3" style="height:36px;width:60%"></div>
+      <div class="skeleton mb-2" style="height:20px;width:30%"></div>
+      <div class="skeleton mb-4" style="height:80px"></div>
+      <div class="skeleton mb-3" style="height:50px;width:40%"></div>
+      <div class="skeleton" style="height:50px"></div>
+    </div>
+  </div>
+
+  <!-- Detalle de productos -->
+  <div id="productDetail" class="d-none row g-5">
+    <div class="col-md-6">
+      <img id="productImg" src="" alt="" class="product-detail-img w-100" onerror="this.src='https://via.placeholder.com/600x450?text=Sin+imagen'"/>
+    </div>
+    <div class="col-md-6">
+      <div id="badgeContainer" class="d-flex gap-2 flex-wrap mb-2"></div>
+      <small id="categoryBadge" class="text-muted text-uppercase fw-semibold letter-spacing-1"></small>
+      <h1 id="productName" class="fw-bold mt-1 mb-2"></h1>
+      <p id="productPrice" class="price-tag fs-1 mb-3"></p>
+      <p id="productDesc" class="text-muted mb-3"></p>
+
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <span id="stockBadge" class="badge fs-6 px-3 py-2"></span>
+        <span id="sellerBadge" class="text-muted small"></span>
+      </div>
+
+      <!-- Selector de cantidad -->
+      <div class="d-flex align-items-center gap-3 mb-4" id="qtySection">
+        <button class="qty-btn" id="qtyMinus">−</button>
+        <input type="number" id="qty-input" value="1" min="1" readonly/>
+        <button class="qty-btn" id="qtyPlus">+</button>
+        <span class="text-muted small">unidades</span>
+      </div>
+
+      <!-- Acciones -->
+      <div class="d-flex gap-3 flex-wrap mb-4">
+        <button id="addCartBtn" class="btn btn-gradient btn-lg flex-grow-1 fw-semibold" disabled>
+          <i class="bi bi-cart-plus me-2"></i>Agregar al Carrito
+        </button>
+        <button id="addFavBtn" class="btn btn-outline-danger btn-lg" title="Favoritos">
+          <i class="bi bi-heart fs-5"></i>
+        </button>
+      </div>
+
+      <div class="alert alert-info small d-flex align-items-center gap-2">
+        <i class="bi bi-shield-check fs-5"></i>
+        <span>Compra segura con garantía de satisfacción. Devoluciones gratis en 30 días.</span>
+      </div>
+
+      <!-- Compartir -->
+      <div class="d-flex gap-2 align-items-center mt-2">
+        <small class="text-muted">Compartir:</small>
+        <a href="#" onclick="window.open('https://wa.me/?text='+encodeURIComponent(document.title+' — '+location.href),'_blank')" class="social-icon" style="width:32px;height:32px;background:#25d366"><i class="bi bi-whatsapp" style="font-size:.85rem"></i></a>
+        <a href="#" onclick="window.open('https://twitter.com/intent/tweet?url='+encodeURIComponent(location.href),'_blank')" class="social-icon" style="width:32px;height:32px"><i class="bi bi-twitter-x" style="font-size:.85rem"></i></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Productos relacionados (misma categoría) -->
+  <div class="mt-5 pt-4 border-top" id="relatedSection" style="display:none!important">
+    <h3 class="section-title mb-4">Productos relacionados</h3>
+    <div id="relatedGrid" class="row g-4"></div>
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="footer py-5 mt-auto">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-6">
+        <h5 class="text-white fw-bold">Market<span class="text-warning">Tech</span></h5>
+        <p class="small mt-2">Tu marketplace de confianza.</p>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <div class="d-flex gap-2 justify-content-md-end">
+          <a href="https://facebook.com"  target="_blank" class="social-icon"><i class="bi bi-facebook"></i></a>
+          <a href="https://instagram.com" target="_blank" class="social-icon"><i class="bi bi-instagram"></i></a>
+          <a href="https://twitter.com"   target="_blank" class="social-icon"><i class="bi bi-twitter-x"></i></a>
+          <a href="https://wa.me/3204567890" target="_blank" class="social-icon" style="background:#25d366"><i class="bi bi-whatsapp"></i></a>
+        </div>
+        <p class="small mt-3 mb-0 text-white-50">&copy; 2026 MarketTech - alfpala@gmail.com - Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div id="toast-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+import { productsAPI, cartAPI, favoritesAPI, Auth, syncNavbar, toast, updateCartBadge } from "./js/api.js";
+
+syncNavbar();
+
+const id = new URLSearchParams(location.search).get("id");
+if (!id) { location.href = "products.html"; }
+
+let product = null;
+let qty = 1;
+let isFav = false;
+
+async function load() {
+  try {
+    product = await productsAPI.get(id);
+
+    document.title = `MarketTech — ${product.name}`;
+    document.getElementById("breadcrumbProduct").textContent = product.name;
+
+    document.getElementById("productImg").src = product.image_url || "https://via.placeholder.com/600x450?text=Sin+imagen";
+    document.getElementById("productImg").alt = product.name;
+    document.getElementById("productName").textContent = product.name;
+    document.getElementById("productPrice").textContent = `$${parseFloat(product.price).toFixed(2)}`;
+    document.getElementById("productDesc").textContent = product.description || "Sin descripción disponible.";
+
+    const badges = document.getElementById("badgeContainer");
+    if (product.featured) badges.innerHTML += `<span class="badge badge-featured fs-6"><i class="bi bi-star-fill me-1"></i>Destacado</span>`;
+    if (product.category_name) document.getElementById("categoryBadge").innerHTML = `<i class="bi bi-tag me-1"></i>${product.category_name}`;
+
+    const stockBadge = document.getElementById("stockBadge");
+    if (product.stock > 0) {
+      stockBadge.className = "badge bg-success fs-6 px-3 py-2";
+      stockBadge.innerHTML = `<i class="bi bi-check-circle me-1"></i>En stock (${product.stock} disp.)`;
+    } else {
+      stockBadge.className = "badge bg-danger fs-6 px-3 py-2";
+      stockBadge.innerHTML = `<i class="bi bi-x-circle me-1"></i>Sin stock`;
+    }
+
+    if (product.seller_name) document.getElementById("sellerBadge").innerHTML = `<i class="bi bi-shop me-1"></i>Vendido por <strong>${product.seller_name}</strong>`;
+
+    const qtySection = document.getElementById("qtySection");
+    const addCartBtn = document.getElementById("addCartBtn");
+
+    if (product.stock > 0) {
+      addCartBtn.disabled = false;
+      document.getElementById("qtyPlus").addEventListener("click", () => { if (qty < product.stock) { qty++; document.getElementById("qty-input").value = qty; } });
+      document.getElementById("qtyMinus").addEventListener("click", () => { if (qty > 1) { qty--; document.getElementById("qty-input").value = qty; } });
+    } else {
+      qtySection.classList.add("d-none");
+      addCartBtn.disabled = true;
+      addCartBtn.innerHTML = '<i class="bi bi-x-circle me-2"></i>Sin stock disponible';
+    }
+
+    document.getElementById("skeleton").classList.add("d-none");
+    document.getElementById("productDetail").classList.remove("d-none");
+
+    // Cargar productos relacionados
+    if (product.category_id) {
+      const { products } = await productsAPI.list({ category: product.category_id, limit: 4 });
+      const related = products.filter(p => p.id !== product.id).slice(0, 4);
+      if (related.length) {
+        const grid = document.getElementById("relatedGrid");
+        document.getElementById("relatedSection").style.display = "block";
+        grid.innerHTML = related.map(p =>`
+          <div class="col-sm-6 col-lg-3">
+            <div class="card product-card h-100">
+              <img src="${p.image_url||'https://via.placeholder.com/300x200'}" class="card-img-top" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300x200'" style="height:160px;object-fit:cover"/>
+              <div class="card-body">
+                <h6 class="fw-bold text-truncate">${p.name}</h6>
+                <p class="price-tag">$${parseFloat(p.price).toFixed(2)}</p>
+                <a href="product-detail.html?id=${p.id}" class="btn btn-primary btn-sm w-100">Ver producto</a>
+              </div>
+            </div>
+          </div>`).join("");
+      }
+    }
+  } catch {
+    document.getElementById("skeleton").innerHTML = `<div class="col-12 text-center py-5"><i class="bi bi-exclamation-triangle fs-1 text-danger"></i><p class="mt-3">Producto no encontrado</p><a href="products.html" class="btn btn-primary">Volver a productos</a></div>`;
+  }
+}
+
+document.getElementById("addCartBtn").addEventListener("click", async () => {
+  if (!Auth.isLoggedIn()) { toast("Inicia sesión para agregar al carrito", "info"); window.location.href = "/login.html"; return; }
+  const btn = document.getElementById("addCartBtn");
+  btn.disabled = true;
+  try {
+    await cartAPI.add({ product_id: parseInt(id), quantity: qty });
+    toast(`${product.name} agregado al carrito`, "success");
+    btn.innerHTML = '<i class="bi bi-cart-check me-2"></i>¡Agregado!';
+    updateCartBadge();
+    setTimeout(() => { btn.disabled = false; btn.innerHTML = '<i class="bi bi-cart-plus me-2"></i>Agregar al Carrito'; }, 2000);
+  } catch { btn.disabled = false; }
+});
+
+document.getElementById("addFavBtn").addEventListener("click", async () => {
+  if (!Auth.isLoggedIn()) { toast("Inicia sesión para guardar favoritos", "info"); window.location.href = "/login.html"; return; }
+  const btn = document.getElementById("addFavBtn");
+  if (isFav) {
+    await favoritesAPI.remove(id);
+    isFav = false;
+    btn.innerHTML = '<i class="bi bi-heart fs-5"></i>';
+    toast("Eliminado de favoritos", "info");
+  } else {
+    await favoritesAPI.add(parseInt(id));
+    isFav = true;
+    btn.innerHTML = '<i class="bi bi-heart-fill fs-5 text-danger"></i>';
+    toast("Agregado a favoritos", "success");
+  }
+});
+
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin — Usuarios</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="css/admin.css"/>
+</head>
+<body>
+<div id="sidebarMount"></div>
+
+<div class="admin-main">
+  <header class="admin-topbar">
+    <button class="btn-toggle-sidebar" id="sidebarToggle"><i class="bi bi-list"></i></button>
+    <div class="topbar-title">
+      <h5><i class="bi bi-people-fill me-2 text-primary"></i>Gestión de Usuarios</h5>
+      <small>Crear, editar y eliminar usuarios del sistema</small>
+    </div>
+    <button class="btn btn-primary btn-sm" id="btnNewUser">
+      <i class="bi bi-person-plus me-1"></i>Nuevo Usuario
+    </button>
+  </header>
+
+  <div class="admin-content">
+    <!-- Filtros -->
+    <div class="row g-2 mb-3">
+      <div class="col-md-5">
+        <div class="input-group">
+          <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+          <input type="search" id="searchInput" class="form-control" placeholder="Buscar por nombre o email…"/>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <select id="roleFilter" class="form-select">
+          <option value="">Todos los roles</option>
+          <option value="admin">Admin</option>
+          <option value="user">Usuario</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-outline-secondary w-100" id="btnRefresh"><i class="bi bi-arrow-clockwise me-1"></i>Refrescar</button>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-card-header">
+        <h6 class="mb-0"><i class="bi bi-table me-2"></i>Usuarios <span class="badge bg-primary ms-1" id="totalBadge">0</span></h6>
+        <div class="admin-pagination" id="pagination"></div>
+      </div>
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th><th>Nombre</th><th>Email</th><th>Rol</th>
+              <th>Registrado</th><th class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody">
+            <tr class="loading-row"><td colspan="6"><span class="spinner-border spinner-border-sm me-2"></span>Cargando usuarios…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CREAR/EDITAR -->
+<div class="modal fade" id="userModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle">Nuevo Usuario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="userForm" novalidate>
+          <input type="hidden" id="userId"/>
+          <div class="mb-3">
+            <label class="form-label">Nombre completo <span class="text-danger">*</span></label>
+            <input type="text" id="uName" class="form-control" placeholder="Juan Pérez" required maxlength="120"/>
+            <div class="invalid-feedback" id="errName"></div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Correo electrónico <span class="text-danger">*</span></label>
+            <input type="email" id="uEmail" class="form-control" placeholder="usuario@email.com" required/>
+            <div class="invalid-feedback" id="errEmail"></div>
+          </div>
+          <div class="mb-3" id="pwdWrapper">
+            <label class="form-label">Contraseña <span class="text-danger" id="pwdRequired">*</span> <small class="text-muted" id="pwdHint">(dejar vacío para no cambiar)</small></label>
+            <div class="input-group">
+              <input type="password" id="uPassword" class="form-control" placeholder="Mínimo 6 caracteres"/>
+              <button type="button" class="btn btn-outline-secondary" id="togglePwdModal"><i class="bi bi-eye"></i></button>
+            </div>
+            <div class="invalid-feedback d-block" id="errPassword" style="display:none!important"></div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Rol <span class="text-danger">*</span></label>
+            <select id="uRole" class="form-select" required>
+              <option value="user">Usuario</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnSaveUser">
+          <span id="saveBtnText"><i class="bi bi-check-lg me-1"></i>Guardar</span>
+          <span id="saveSpinner" class="d-none spinner-border spinner-border-sm"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ELIMINAR -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content text-center">
+      <div class="modal-body p-4">
+        <i class="bi bi-exclamation-triangle-fill text-danger fs-1 mb-3 d-block"></i>
+        <h6 class="fw-bold">¿Eliminar usuario?</h6>
+        <p class="text-muted small" id="deleteUserName">Este usuario</p>
+        <div class="d-flex gap-2 justify-content-center mt-3">
+          <button class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-danger btn-sm" id="btnConfirmDelete">
+            <i class="bi bi-trash me-1"></i>Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="admin-toasts"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+import { AdminAuth, usersAPI, toast, buildPagination, debounce } from "./js/admin-api.js";
+import { injectSidebar } from "./js/sidebar.js";
+
+AdminAuth.requireAdmin();
+injectSidebar("users.html");
+const user = AdminAuth.getUser();
+if (user) {
+  const av = document.getElementById("sidebarAvatar"); const nm = document.getElementById("sidebarName");
+  if (av) av.textContent = user.name.charAt(0).toUpperCase();
+  if (nm) nm.textContent = user.name;
+}
+
+let currentPage = 1;
+let editingId = null;
+let deleteId = null;
+const userModal   = new bootstrap.Modal(document.getElementById("userModal"));
+const deleteModal = new bootstrap.Modal(document.getElementById("deleteModal"));
+
+// Activar o desactivar la visibilidad de la contraseña en el modal de usuario
+document.getElementById("togglePwdModal").addEventListener("click", () => {
+  const pwd = document.getElementById("uPassword");
+  const icon = document.querySelector("#togglePwdModal i");
+  pwd.type = pwd.type === "password" ? "text" : "password";
+  icon.className = pwd.type === "text" ? "bi bi-eye-slash" : "bi bi-eye";
+});
+
+// ── Cargar usuarios ──
+async function load() {
+  const search = document.getElementById("searchInput").value.trim();
+  const role   = document.getElementById("roleFilter").value;
+  const tbody  = document.getElementById("usersBody");
+  tbody.innerHTML = `<tr class="loading-row"><td colspan="6"><span class="spinner-border spinner-border-sm me-2"></span>Cargando…</td></tr>`;
+
+  try {
+    const { users, total } = await usersAPI.list({ search, role, page: currentPage, limit: 15 });
+    document.getElementById("totalBadge").textContent = total;
+
+    if (!users.length) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted"><i class="bi bi-person-x fs-3 d-block mb-2"></i>Sin usuarios encontrados</td></tr>`;
+      document.getElementById("pagination").innerHTML = "";
+      return;
+    }
+    tbody.innerHTML = users.map(u => `
+      <tr>
+        <td class="text-muted">#${u.id}</td>
+        <td>
+          <div class="d-flex align-items-center gap-2">
+            <div class="user-avatar" style="width:32px;height:32px;font-size:.8rem;flex-shrink:0">${u.name.charAt(0).toUpperCase()}</div>
+            <span class="fw-semibold">${escHtml(u.name)}</span>
+          </div>
+        </td>
+        <td class="text-muted">${escHtml(u.email)}</td>
+        <td><span class="role-badge role-${u.role}">${u.role === "admin" ? "Admin" : "Usuario"}</span></td>
+        <td class="text-muted small">${new Date(u.created_at).toLocaleDateString("es-ES")}</td>
+        <td class="text-end">
+          <button class="btn btn-sm btn-outline-primary btn-sm-action me-1" onclick="openEdit(${u.id})"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-outline-danger btn-sm-action" onclick="openDelete(${u.id},'${escHtml(u.name)}')"
+            ${u.id === user.id ? 'disabled title="No puedes eliminarte a ti mismo"' : ''}><i class="bi bi-trash"></i></button>
+        </td>
+      </tr>`).join("");
+
+    buildPagination("pagination", total, 15, currentPage, (p) => { currentPage = p; load(); });
+  } catch {}
+}
+
+// ── Validar formulario ──
+function validateForm(isEdit) {
+  clearErrors();
+  let valid = true;
+  const name  = document.getElementById("uName").value.trim();
+  const email = document.getElementById("uEmail").value.trim();
+  const pwd   = document.getElementById("uPassword").value;
+
+  if (!name || name.length < 2) {
+    showErr("errName", "uName", "El nombre debe tener al menos 2 caracteres"); valid = false;
+  }
+  if (!email || !/\S+@\S+\.\S+/.test(email)) {
+    showErr("errEmail", "uEmail", "Ingresa un correo electrónico válido"); valid = false;
+  }
+  if (!isEdit && (!pwd || pwd.length < 6)) {
+    showErr("errPassword", "uPassword", "La contraseña debe tener al menos 6 caracteres"); valid = false;
+  }
+  if (isEdit && pwd && pwd.length < 6) {
+    showErr("errPassword", "uPassword", "La contraseña debe tener al menos 6 caracteres"); valid = false;
+  }
+  return valid;
+}
+function showErr(errId, fieldId, msg) {
+  const errEl = document.getElementById(errId);
+  const fldEl = document.getElementById(fieldId);
+  if (errEl) { errEl.textContent = msg; errEl.style.display = "block"; }
+  if (fldEl) fldEl.classList.add("is-invalid");
+}
+function clearErrors() {
+  ["errName","errEmail","errPassword"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = ""; el.style.display = "none"; }
+  });
+  ["uName","uEmail","uPassword"].forEach(id => {
+    document.getElementById(id)?.classList.remove("is-invalid");
+  });
+}
+function escHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); }
+
+// ── Abrir crear ──
+document.getElementById("btnNewUser").addEventListener("click", () => {
+  editingId = null;
+  clearErrors();
+  document.getElementById("modalTitle").textContent = "Nuevo Usuario";
+  document.getElementById("userId").value = "";
+  document.getElementById("uName").value = "";
+  document.getElementById("uEmail").value = "";
+  document.getElementById("uPassword").value = "";
+  document.getElementById("uRole").value = "user";
+  document.getElementById("pwdRequired").style.display = "inline";
+  document.getElementById("pwdHint").style.display = "none";
+  userModal.show();
+});
+
+// ── Abrir editar ──
+window.openEdit = async (id) => {
+  editingId = id;
+  clearErrors();
+  try {
+    const u = await usersAPI.get(id);
+    document.getElementById("modalTitle").textContent = "Editar Usuario";
+    document.getElementById("userId").value = u.id;
+    document.getElementById("uName").value = u.name;
+    document.getElementById("uEmail").value = u.email;
+    document.getElementById("uPassword").value = "";
+    document.getElementById("uRole").value = u.role;
+    document.getElementById("pwdRequired").style.display = "none";
+    document.getElementById("pwdHint").style.display = "inline";
+    userModal.show();
+  } catch {}
+};
+
+// ── Guardar ──
+document.getElementById("btnSaveUser").addEventListener("click", async () => {
+  const isEdit = !!editingId;
+  if (!validateForm(isEdit)) return;
+
+  const payload = {
+    name:  document.getElementById("uName").value.trim(),
+    email: document.getElementById("uEmail").value.trim(),
+    role:  document.getElementById("uRole").value,
+  };
+  const pwd = document.getElementById("uPassword").value;
+  if (pwd) payload.password = pwd;
+
+  const saveText = document.getElementById("saveBtnText");
+  const spinner  = document.getElementById("saveSpinner");
+  saveText.classList.add("d-none"); spinner.classList.remove("d-none");
+
+  try {
+    if (isEdit) {
+      await usersAPI.update(editingId, payload);
+      toast("Usuario actualizado correctamente", "ok");
+    } else {
+      await usersAPI.create(payload);
+      toast("Usuario creado correctamente", "ok");
+    }
+    userModal.hide();
+    load();
+  } catch {} finally {
+    saveText.classList.remove("d-none"); spinner.classList.add("d-none");
+  }
+});
+
+// ── Eliminar ──
+window.openDelete = (id, name) => {
+  deleteId = id;
+  document.getElementById("deleteUserName").textContent = `"${name}" será eliminado permanentemente.`;
+  deleteModal.show();
+};
+document.getElementById("btnConfirmDelete").addEventListener("click", async () => {
+  if (!deleteId) return;
+  try {
+    await usersAPI.delete(deleteId);
+    toast("Usuario eliminado", "ok");
+    deleteModal.hide();
+    load();
+  } catch {}
+});
+
+// ── Buscar y filtrar ──
+document.getElementById("searchInput").addEventListener("input", debounce(() => { currentPage = 1; load(); }));
+document.getElementById("roleFilter").addEventListener("change", () => { currentPage = 1; load(); });
+document.getElementById("btnRefresh").addEventListener("click", () => load());
+
+load();
+</script>
+</body>
+</html>

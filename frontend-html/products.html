@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MarketTech — Productos</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body>
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark" style="background:linear-gradient(135deg,#1e293b,#2563eb)">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="index.html">Market<span style="color:#f59e0b">Tech</span></a>
+    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="nav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house me-1"></i>Inicio</a></li>
+        <li class="nav-item"><a class="nav-link active" href="products.html"><i class="bi bi-grid me-1"></i>Productos</a></li>
+        <li class="nav-item d-none" id="nav-myproducts"><a class="nav-link" href="my-products.html"><i class="bi bi-box me-1"></i>Mis Productos</a></li>
+        <li class="nav-item d-none" id="nav-fav"><a class="nav-link" href="favorites.html"><i class="bi bi-heart me-1"></i>Favoritos</a></li>
+        <li class="nav-item d-none" id="nav-orders"><a class="nav-link" href="orders.html"><i class="bi bi-receipt me-1"></i>Mis Pedidos</a></li>
+      </ul>
+      <ul class="navbar-nav align-items-center gap-1">
+        <li class="nav-item d-none" id="nav-cart-wrap">
+          <a href="cart.html" class="nav-link position-relative">
+            <i class="bi bi-cart3 fs-5"></i>
+            <span id="cart-count" class="badge bg-danger badge-cart" style="display:none">0</span>
+          </a>
+        </li>
+        <li class="nav-item" id="nav-auth"><a class="nav-link" href="login.html"><i class="bi bi-person me-1"></i>Iniciar sesión</a></li>
+        <li class="nav-item d-none"><span class="nav-link text-warning fw-semibold" id="nav-user"></span></li>
+        <li class="nav-item d-none" id="nav-logout"><a href="#" class="btn btn-sm btn-outline-light ms-1"><i class="bi bi-box-arrow-right me-1"></i>Salir</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Encabezado de Productos -->
+<div style="background:linear-gradient(135deg,#1e40af,#7c3aed)" class="py-4">
+  <div class="container">
+    <h1 class="text-white fw-bold mb-1"><i class="bi bi-grid me-2"></i>Catálogo de Productos</h1>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="index.html" class="text-white-50">Inicio</a></li>
+        <li class="breadcrumb-item active text-white">Productos</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<main class="container py-5">
+  <div class="row g-4">
+
+    <!-- FILTROS LATERALES -->
+    <div class="col-lg-3">
+      <div class="filter-card card p-3 mb-3">
+        <h6 class="fw-bold mb-3"><i class="bi bi-search me-2 text-primary"></i>Buscar</h6>
+        <input type="text" id="searchInput" class="form-control" placeholder="Busca un producto…"/>
+      </div>
+
+      <div class="filter-card card p-3 mb-3">
+        <h6 class="fw-bold mb-3"><i class="bi bi-tag me-2 text-primary"></i>Categoría</h6>
+        <div id="categoryList" class="d-flex flex-column gap-1">
+          <button class="btn btn-sm btn-primary text-start category-pill active" data-id="">Todas las categorías</button>
+        </div>
+      </div>
+
+      <div class="filter-card card p-3 mb-3">
+        <h6 class="fw-bold mb-3"><i class="bi bi-currency-dollar me-2 text-primary"></i>Rango de Precio</h6>
+        <label class="small text-muted mb-1">Precio mínimo: $<span id="minLabel">0</span></label>
+        <input type="range" class="form-range mb-2" id="minPrice" min="0" max="2000" step="10" value="0"/>
+        <label class="small text-muted mb-1">Precio máximo: $<span id="maxLabel">2000</span></label>
+        <input type="range" class="form-range" id="maxPrice" min="0" max="2000" step="10" value="2000"/>
+        <button id="applyPriceBtn" class="btn btn-outline-primary btn-sm w-100 mt-2">Aplicar</button>
+      </div>
+
+      <div class="filter-card card p-3">
+        <h6 class="fw-bold mb-3"><i class="bi bi-sort-down me-2 text-primary"></i>Ordenar por</h6>
+        <select id="sortSelect" class="form-select form-select-sm">
+          <option value="">Más recientes</option>
+          <option value="price_asc">Precio: menor a mayor</option>
+          <option value="price_desc">Precio: mayor a menor</option>
+          <option value="featured">Destacados primero</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- CUADRÍCULA DE PRODUCTOS -->
+    <div class="col-lg-9">
+      <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <p class="mb-0 text-muted small"><span id="productCount">0</span> productos encontrados</p>
+        <div class="d-flex gap-2">
+          <button id="viewGrid" class="btn btn-sm btn-primary"><i class="bi bi-grid"></i></button>
+          <button id="viewList" class="btn btn-sm btn-outline-secondary"><i class="bi bi-list"></i></button>
+        </div>
+      </div>
+
+      <div id="productGrid" class="row g-4"></div>
+      <div id="pagination" class="d-flex justify-content-center gap-2 mt-4"></div>
+    </div>
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="footer py-5 mt-auto">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <h5 class="text-white fw-bold">Market<span class="text-warning">Tech</span></h5>
+        <p class="small mt-2">Tu marketplace de confianza para tecnología, moda, hogar y más.</p>
+      </div>
+      <div class="col-md-4">
+        <h6 class="text-white">Síguenos</h6>
+        <div class="d-flex gap-2 mt-2">
+          <a href="https://facebook.com"  target="_blank" class="social-icon"><i class="bi bi-facebook"></i></a>
+          <a href="https://instagram.com" target="_blank" class="social-icon"><i class="bi bi-instagram"></i></a>
+          <a href="https://twitter.com"   target="_blank" class="social-icon"><i class="bi bi-twitter-x"></i></a>
+          <a href="https://wa.me/3204567890?text=Hola%20necesito%20ayuda" target="_blank" class="social-icon" style="background:#25d366"><i class="bi bi-whatsapp"></i></a>
+        </div>
+      </div>
+      <div class="col-md-4 text-md-end">
+        <p class="small mb-0 text-white-50">&copy; 2026 MarketTech - alfpala@gmail.com - Todos los derechos reservados.</p>
+        <a href="https://wa.me/3204567890" target="_blank" class="btn btn-success btn-sm mt-2">
+          <i class="bi bi-whatsapp me-1"></i>Contactar por WhatsApp
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div id="toast-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+import { productsAPI, categoriesAPI, cartAPI, favoritesAPI, Auth, syncNavbar, toast, updateCartBadge } from "./js/api.js";
+
+syncNavbar();
+
+let state = { page: 1, limit: 12, category: "", minPrice: 0, maxPrice: 2000, search: "", viewMode: "grid" };
+
+// Categorías
+async function loadCategories() {
+  try {
+    const cats = await categoriesAPI.list();
+    const list = document.getElementById("categoryList");
+    cats.forEach(c => {
+      const btn = document.createElement("button");
+      btn.className = "btn btn-sm btn-outline-primary text-start category-pill";
+      btn.dataset.id = c.id;
+      btn.textContent = c.name;
+      list.appendChild(btn);
+    });
+    list.querySelectorAll(".category-pill").forEach(b => {
+      b.addEventListener("click", () => {
+        list.querySelectorAll(".category-pill").forEach(x => { x.classList.remove("active","btn-primary"); x.classList.add("btn-outline-primary"); });
+        b.classList.add("active","btn-primary"); b.classList.remove("btn-outline-primary");
+        state.category = b.dataset.id; state.page = 1; loadProducts();
+      });
+    });
+  } catch {}
+}
+
+// Productos
+async function loadProducts() {
+  const grid = document.getElementById("productGrid");
+  grid.innerHTML = Array(8).fill(0).map(()=>`<div class="col-sm-6 col-xl-4"><div class="card product-card"><div class="skeleton" style="height:200px"></div><div class="card-body"><div class="skeleton mb-2" style="height:20px;width:80%"></div><div class="skeleton" style="height:16px;width:50%"></div></div></div></div>`).join("");
+
+  try {
+    const params = { page: state.page, limit: state.limit };
+    if (state.category) params.category = state.category;
+    if (state.minPrice > 0) params.minPrice = state.minPrice;
+    if (state.maxPrice < 2000) params.maxPrice = state.maxPrice;
+    if (state.search) params.search = state.search;
+
+    const { products, total, limit } = await productsAPI.list(params);
+    document.getElementById("productCount").textContent = total;
+
+    if (!products.length) {
+      grid.innerHTML = `<div class="col-12 text-center py-5"><i class="bi bi-search fs-1 text-muted"></i><p class="mt-3 text-muted">Sin resultados para tu búsqueda</p><button class="btn btn-outline-primary btn-sm" onclick="location.reload()">Limpiar filtros</button></div>`;
+      document.getElementById("pagination").innerHTML = "";
+      return;
+    }
+
+    const colClass = state.viewMode === "list" ? "col-12" : "col-sm-6 col-xl-4";
+    grid.innerHTML = products.map(p => productCard(p, colClass)).join("");
+    renderPagination(total, limit);
+  } catch {}
+}
+
+function productCard(p, colClass = "col-sm-6 col-xl-4") {
+  const isList = colClass.includes("col-12");
+  if (isList) return `
+    <div class="${colClass}">
+      <div class="card product-card flex-row align-items-center overflow-hidden">
+        <img src="${p.image_url||'https://via.placeholder.com/150'}" alt="${p.name}" style="width:130px;height:130px;object-fit:cover;flex-shrink:0" onerror="this.src='https://via.placeholder.com/150'"/>
+        <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div>
+            ${p.featured ? '<span class="badge badge-featured"><i class="bi bi-star-fill me-1"></i>Destacado</span> ' : ""}
+            ${p.category_name ? `<span class="badge bg-light text-secondary small">${p.category_name}</span>` : ""}
+            <h6 class="fw-bold mb-1 mt-1">${p.name}</h6>
+            <p class="text-muted small mb-1">${(p.description||"").substring(0,80)}…</p>
+            <p class="text-muted small mb-0">${p.stock>0?`<span class="text-success"><i class="bi bi-check-circle"></i> Stock: ${p.stock}</span>`:'<span class="text-danger"><i class="bi bi-x-circle"></i> Sin stock</span>'}</p>
+          </div>
+          <div class="text-end">
+            <p class="price-tag mb-2">$${parseFloat(p.price).toFixed(2)}</p>
+            <div class="d-flex gap-2">
+              <a href="product-detail.html?id=${p.id}" class="btn btn-primary btn-sm"><i class="bi bi-eye me-1"></i>Ver</a>
+              <button class="btn btn-outline-danger btn-sm fav-btn" data-id="${p.id}"><i class="bi bi-heart"></i></button>
+              <button class="btn btn-outline-primary btn-sm cart-btn" data-id="${p.id}" ${p.stock<1?'disabled':''}><i class="bi bi-cart-plus"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  return `
+    <div class="${colClass}">
+      <div class="card product-card h-100">
+        <div style="overflow:hidden">
+          <img src="${p.image_url||'https://via.placeholder.com/400x200?text=Sin+imagen'}" class="card-img-top" alt="${p.name}" onerror="this.src='https://via.placeholder.com/400x200?text=Sin+imagen'"/>
+        </div>
+        <div class="card-body d-flex flex-column gap-1">
+          ${p.featured ? '<span class="badge badge-featured"><i class="bi bi-star-fill me-1"></i>Destacado</span>' : ""}
+          ${p.category_name ? `<span class="badge bg-light text-secondary small">${p.category_name}</span>` : ""}
+          <h6 class="card-title fw-bold mb-0 mt-1 text-truncate">${p.name}</h6>
+          <p class="price-tag mb-0">$${parseFloat(p.price).toFixed(2)}</p>
+          <p class="text-muted small mb-1">${p.stock>0?`<i class="bi bi-check-circle text-success"></i> Stock: ${p.stock}`:'<span class="text-danger"><i class="bi bi-x-circle"></i> Sin stock</span>'}</p>
+          <div class="d-flex gap-2 mt-auto pt-1">
+            <a href="product-detail.html?id=${p.id}" class="btn btn-primary btn-sm flex-grow-1"><i class="bi bi-eye me-1"></i>Ver</a>
+            <button class="btn btn-outline-danger btn-sm fav-btn" data-id="${p.id}" title="Favorito"><i class="bi bi-heart"></i></button>
+            <button class="btn btn-outline-primary btn-sm cart-btn" data-id="${p.id}" ${p.stock<1?'disabled':''} title="Carrito"><i class="bi bi-cart-plus"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderPagination(total, limit) {
+  const pages = Math.ceil(total / limit);
+  const el = document.getElementById("pagination");
+  if (pages <= 1) { el.innerHTML = ""; return; }
+  let html = `<button class="btn btn-sm btn-outline-secondary" ${state.page===1?'disabled':''} id="prevPage"><i class="bi bi-chevron-left"></i></button>`;
+  for (let i = 1; i <= pages; i++) html += `<button class="btn btn-sm btn${i===state.page?'':'-outline'}-primary page-btn" data-p="${i}">${i}</button>`;
+  html += `<button class="btn btn-sm btn-outline-secondary" ${state.page===pages?'disabled':''} id="nextPage"><i class="bi bi-chevron-right"></i></button>`;
+  el.innerHTML = html;
+  el.querySelectorAll(".page-btn").forEach(b => b.addEventListener("click", ()=>{ state.page=parseInt(b.dataset.p); loadProducts(); window.scrollTo({top:300,behavior:'smooth'}); }));
+  el.querySelector("#prevPage")?.addEventListener("click", ()=>{ state.page--; loadProducts(); });
+  el.querySelector("#nextPage")?.addEventListener("click", ()=>{ state.page++; loadProducts(); });
+}
+
+// Delegar a: carrito y favoritos
+document.getElementById("productGrid").addEventListener("click", async (e) => {
+  if (!Auth.isLoggedIn()) { toast("Inicia sesión para continuar", "info"); window.location.href="/login.html"; return; }
+  const cartBtn = e.target.closest(".cart-btn");
+  if (cartBtn) {
+    cartBtn.disabled = true;
+    try { await cartAPI.add({ product_id: parseInt(cartBtn.dataset.id), quantity: 1 }); toast("Agregado al carrito", "success"); cartBtn.innerHTML='<i class="bi bi-cart-check"></i>'; updateCartBadge(); }
+    catch {} finally { setTimeout(()=>{ cartBtn.disabled=false; cartBtn.innerHTML='<i class="bi bi-cart-plus"></i>'; },2000); }
+    return;
+  }
+  const favBtn = e.target.closest(".fav-btn");
+  if (favBtn) {
+    try { await favoritesAPI.add(parseInt(favBtn.dataset.id)); toast("Agregado a favoritos", "success"); favBtn.innerHTML='<i class="bi bi-heart-fill text-danger"></i>'; }
+    catch {}
+  }
+});
+
+// Búsqueda
+let searchTimer;
+document.getElementById("searchInput").addEventListener("input", (e) => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(()=>{ state.search=e.target.value; state.page=1; loadProducts(); }, 400);
+});
+
+// Rango de precios
+document.getElementById("minPrice").addEventListener("input", e => document.getElementById("minLabel").textContent = e.target.value);
+document.getElementById("maxPrice").addEventListener("input", e => document.getElementById("maxLabel").textContent = e.target.value);
+document.getElementById("applyPriceBtn").addEventListener("click", () => {
+  state.minPrice = parseInt(document.getElementById("minPrice").value);
+  state.maxPrice = parseInt(document.getElementById("maxPrice").value);
+  state.page = 1; loadProducts();
+});
+
+// Ver alternar vista
+document.getElementById("viewGrid").addEventListener("click", ()=>{ state.viewMode="grid"; loadProducts(); });
+document.getElementById("viewList").addEventListener("click", ()=>{ state.viewMode="list"; loadProducts(); });
+
+// Pre-filtrar por parámetro de URL
+const urlCat = new URLSearchParams(location.search).get("category");
+if (urlCat) state.category = urlCat;
+
+loadCategories();
+loadProducts();
+</script>
+</body>
+</html>

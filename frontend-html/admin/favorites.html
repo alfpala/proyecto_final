@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin — Favoritos</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="css/admin.css"/>
+</head>
+<body>
+<div id="sidebarMount"></div>
+<div class="admin-main">
+  <header class="admin-topbar">
+    <button class="btn-toggle-sidebar" id="sidebarToggle"><i class="bi bi-list"></i></button>
+    <div class="topbar-title">
+      <h5><i class="bi bi-heart-fill me-2 text-danger"></i>Favoritos</h5>
+      <small>Productos marcados como favoritos por los usuarios</small>
+    </div>
+  </header>
+
+  <div class="admin-content">
+    <!-- estadística -->
+    <div class="row g-3 mb-3">
+      <div class="col-sm-4 col-xl-2">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fff1f2"><i class="bi bi-heart-fill text-danger"></i></div>
+          <div class="stat-body"><div class="stat-label">Total Favoritos</div><div class="stat-value text-danger" id="totalFav">–</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtro -->
+    <div class="row g-2 mb-3">
+      <div class="col-md-5">
+        <div class="input-group">
+          <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+          <input type="search" id="searchInput" class="form-control" placeholder="Buscar por usuario o producto…"/>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-outline-secondary w-100" id="btnRefresh"><i class="bi bi-arrow-clockwise me-1"></i>Refrescar</button>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-card-header">
+        <h6 class="mb-0"><i class="bi bi-table me-2"></i>Favoritos <span class="badge bg-danger ms-1" id="totalBadge">0</span></h6>
+        <div class="admin-pagination" id="pagination"></div>
+      </div>
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr><th>ID</th><th>Usuario</th><th>Email</th><th>Producto</th><th>Precio</th><th>Agregado</th><th class="text-end">Acción</th></tr>
+          </thead>
+          <tbody id="favsBody">
+            <tr class="loading-row"><td colspan="7"><span class="spinner-border spinner-border-sm me-2"></span>Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content text-center">
+      <div class="modal-body p-4">
+        <i class="bi bi-heart-fill text-danger fs-1 mb-3 d-block"></i>
+        <h6 class="fw-bold">¿Eliminar favorito?</h6>
+        <p class="text-muted small" id="deleteMsg">Este favorito será eliminado.</p>
+        <div class="d-flex gap-2 justify-content-center mt-3">
+          <button class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-danger btn-sm" id="btnConfirmDelete"><i class="bi bi-trash me-1"></i>Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="admin-toasts"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+import { AdminAuth, favoritesAPI, toast, buildPagination, debounce } from "./js/admin-api.js";
+import { injectSidebar } from "./js/sidebar.js";
+
+AdminAuth.requireAdmin();
+injectSidebar("favorites.html");
+const user = AdminAuth.getUser();
+if (user) {
+  const av = document.getElementById("sidebarAvatar"); const nm = document.getElementById("sidebarName");
+  if (av) av.textContent = user.name.charAt(0).toUpperCase();
+  if (nm) nm.textContent = user.name;
+}
+
+let currentPage = 1;
+let deleteId = null;
+let allFavs = [];
+const deleteModal = new bootstrap.Modal(document.getElementById("deleteModal"));
+
+function escHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); }
+
+async function load() {
+  const tbody = document.getElementById("favsBody");
+  tbody.innerHTML = `<tr class="loading-row"><td colspan="7"><span class="spinner-border spinner-border-sm me-2"></span>Cargando…</td></tr>`;
+  try {
+    const { favorites, total } = await favoritesAPI.list({ page: currentPage, limit: 20 });
+    allFavs = favorites;
+    document.getElementById("totalBadge").textContent = total;
+    document.getElementById("totalFav").textContent   = total;
+    renderTable(document.getElementById("searchInput").value.trim());
+    buildPagination("pagination", total, 20, currentPage, (pg) => { currentPage = pg; load(); });
+  } catch {}
+}
+
+function renderTable(filter) {
+  const tbody = document.getElementById("favsBody");
+  const rows = filter
+    ? allFavs.filter(f =>
+        f.user_name.toLowerCase().includes(filter.toLowerCase()) ||
+        f.user_email.toLowerCase().includes(filter.toLowerCase()) ||
+        f.product_name.toLowerCase().includes(filter.toLowerCase()))
+    : allFavs;
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted"><i class="bi bi-heart fs-3 d-block mb-2"></i>Sin favoritos encontrados</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(f => `
+    <tr>
+      <td class="text-muted">#${f.id}</td>
+      <td>
+        <div class="d-flex align-items-center gap-2">
+          <div class="user-avatar" style="width:30px;height:30px;font-size:.75rem;flex-shrink:0">${(f.user_name||"?").charAt(0).toUpperCase()}</div>
+          <span class="fw-semibold">${escHtml(f.user_name||"—")}</span>
+        </div>
+      </td>
+      <td class="text-muted small">${escHtml(f.user_email||"—")}</td>
+      <td>
+        <div class="d-flex align-items-center gap-2">
+          ${f.image_url ? `<img src="${escHtml(f.image_url)}" style="width:36px;height:36px;object-fit:cover;border-radius:6px" onerror="this.style.display='none'"/>` : ""}
+          <div>
+            <span class="fw-semibold">${escHtml(f.product_name||"—")}</span>
+            ${f.featured ? '<i class="bi bi-star-fill text-warning ms-1"></i>' : ""}
+          </div>
+        </div>
+      </td>
+      <td class="fw-bold">$${parseFloat(f.price||0).toFixed(2)}</td>
+      <td class="text-muted small">${new Date(f.created_at).toLocaleDateString("es-ES")}</td>
+      <td class="text-end">
+        <button class="btn btn-sm btn-outline-danger btn-sm-action" onclick="openDelete(${f.id},'${escHtml(f.product_name)}','${escHtml(f.user_name)}')">
+          <i class="bi bi-trash"></i>
+        </button>
+      </td>
+    </tr>`).join("");
+}
+
+window.openDelete = (id, product, user) => {
+  deleteId = id;
+  document.getElementById("deleteMsg").textContent = `Favorito de "${user}" sobre "${product}".`;
+  deleteModal.show();
+};
+document.getElementById("btnConfirmDelete").addEventListener("click", async () => {
+  if (!deleteId) return;
+  try { await favoritesAPI.delete(deleteId); toast("Favorito eliminado", "ok"); deleteModal.hide(); load(); } catch {}
+});
+
+document.getElementById("searchInput").addEventListener("input", debounce((e) => renderTable(e.target.value.trim())));
+document.getElementById("btnRefresh").addEventListener("click", load);
+load();
+</script>
+</body>
+</html>

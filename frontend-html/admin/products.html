@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin — Productos</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="css/admin.css"/>
+</head>
+<body>
+<div id="sidebarMount"></div>
+<div class="admin-main">
+  <header class="admin-topbar">
+    <button class="btn-toggle-sidebar" id="sidebarToggle"><i class="bi bi-list"></i></button>
+    <div class="topbar-title">
+      <h5><i class="bi bi-box-seam-fill me-2" style="color:#7c3aed"></i>Gestión de Productos</h5>
+      <small>CRUD completo de productos con categorías</small>
+    </div>
+    <button class="btn btn-sm me-1" style="background:#7c3aed;color:#fff" id="btnNewProd"><i class="bi bi-plus-lg me-1"></i>Nuevo Producto</button>
+  </header>
+
+  <div class="admin-content">
+    <!-- Fila de filtros-->
+    <div class="row g-2 mb-3">
+      <div class="col-md-4">
+        <div class="input-group">
+          <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+          <input type="search" id="searchInput" class="form-control" placeholder="Buscar producto…"/>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <select id="catFilter" class="form-select"><option value="">Todas las categorías</option></select>
+      </div>
+      <div class="col-md-2">
+        <select id="featuredFilter" class="form-select">
+          <option value="">Todos</option>
+          <option value="true">Destacados</option>
+          <option value="false">No destacados</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-outline-secondary w-100" id="btnRefresh"><i class="bi bi-arrow-clockwise me-1"></i>Refrescar</button>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-card-header">
+        <h6 class="mb-0"><i class="bi bi-table me-2"></i>Productos <span class="badge ms-1" style="background:#7c3aed" id="totalBadge">0</span></h6>
+        <div class="admin-pagination" id="pagination"></div>
+      </div>
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th><th>Imagen</th><th>Nombre</th><th>Categoría</th>
+              <th>Precio</th><th>Stock</th><th>Destacado</th><th>Vendedor</th><th class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="prodsBody">
+            <tr class="loading-row"><td colspan="9"><span class="spinner-border spinner-border-sm me-2"></span>Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CREAR/EDITAR -->
+<div class="modal fade" id="prodModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle">Nuevo Producto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="prodForm" novalidate>
+          <input type="hidden" id="prodId"/>
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label">Nombre <span class="text-danger">*</span></label>
+              <input type="text" id="pName" class="form-control" placeholder="Nombre del producto" required maxlength="200"/>
+              <div class="invalid-feedback" id="errName">El nombre es obligatorio (mín. 2 caracteres)</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Categoría</label>
+              <select id="pCategory" class="form-select">
+                <option value="">Sin categoría</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Precio (USD) <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input type="number" id="pPrice" class="form-control" placeholder="0.00" min="0.01" step="0.01" required/>
+              </div>
+              <div class="invalid-feedback" id="errPrice">Precio obligatorio, mayor a 0</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Stock <span class="text-danger">*</span></label>
+              <input type="number" id="pStock" class="form-control" placeholder="0" min="0" step="1" required/>
+              <div class="invalid-feedback" id="errStock">Stock obligatorio, mayor o igual a 0</div>
+            </div>
+            <div class="col-md-4 d-flex align-items-end pb-1">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="pFeatured" role="switch"/>
+                <label class="form-check-label fw-semibold" for="pFeatured"><i class="bi bi-star-fill text-warning me-1"></i>Producto Destacado</label>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Descripción</label>
+              <textarea id="pDesc" class="form-control" rows="3" placeholder="Descripción del producto…" maxlength="2000"></textarea>
+              <div class="form-text"><span id="descCount">0</span>/2000 caracteres</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">URL de Imagen</label>
+              <input type="url" id="pImage" class="form-control" placeholder="https://…"/>
+              <div class="invalid-feedback" id="errImage">Ingresa una URL válida</div>
+              <img id="imgPreview" src="" alt="Vista previa" class="img-preview mt-2"
+                style="display:none;max-height:140px;object-fit:cover;border-radius:8px;border:1.5px solid #e2e8f0"/>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-sm text-white" style="background:#7c3aed" id="btnSaveProd">
+          <span id="saveBtnText"><i class="bi bi-check-lg me-1"></i>Guardar Producto</span>
+          <span id="saveSpinner" class="d-none spinner-border spinner-border-sm"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ELIMINAR -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content text-center">
+      <div class="modal-body p-4">
+        <i class="bi bi-exclamation-triangle-fill text-danger fs-1 mb-3 d-block"></i>
+        <h6 class="fw-bold">¿Eliminar producto?</h6>
+        <p class="text-muted small" id="deleteProdMsg"></p>
+        <div class="d-flex gap-2 justify-content-center mt-3">
+          <button class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-danger btn-sm" id="btnConfirmDelete"><i class="bi bi-trash me-1"></i>Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="admin-toasts"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+import { AdminAuth, productsAPI, categoriesAPI, toast, buildPagination, debounce } from "./js/admin-api.js";
+import { injectSidebar } from "./js/sidebar.js";
+
+AdminAuth.requireAdmin();
+injectSidebar("products.html");
+const user = AdminAuth.getUser();
+if (user) {
+  const av = document.getElementById("sidebarAvatar"); const nm = document.getElementById("sidebarName");
+  if (av) av.textContent = user.name.charAt(0).toUpperCase();
+  if (nm) nm.textContent = user.name;
+}
+
+let currentPage = 1;
+let editingId = null;
+let deleteId = null;
+let categories = [];
+const prodModal   = new bootstrap.Modal(document.getElementById("prodModal"));
+const deleteModal = new bootstrap.Modal(document.getElementById("deleteModal"));
+
+// ── Cargar categorías para filtro + modal ──
+async function loadCategories() {
+  try {
+    categories = await categoriesAPI.list();
+    const sel1 = document.getElementById("catFilter");
+    const sel2 = document.getElementById("pCategory");
+    categories.forEach(c => {
+      sel1.innerHTML += `<option value="${c.id}">${escHtml(c.name)}</option>`;
+      sel2.innerHTML += `<option value="${c.id}">${escHtml(c.name)}</option>`;
+    });
+  } catch {}
+}
+
+// ── Vista previa de imagen ──
+document.getElementById("pImage").addEventListener("input", (e) => {
+  const preview = document.getElementById("imgPreview");
+  const val = e.target.value.trim();
+  if (val) { preview.src = val; preview.style.display = "block"; preview.onerror = () => { preview.style.display = "none"; }; }
+  else preview.style.display = "none";
+});
+
+// ── Contador de descripción ──
+document.getElementById("pDesc").addEventListener("input", (e) => {
+  document.getElementById("descCount").textContent = e.target.value.length;
+});
+
+// ── Cargar productos ──
+async function load() {
+  const search   = document.getElementById("searchInput").value.trim();
+  const category = document.getElementById("catFilter").value;
+  const featured = document.getElementById("featuredFilter").value;
+  const tbody = document.getElementById("prodsBody");
+  tbody.innerHTML = `<tr class="loading-row"><td colspan="9"><span class="spinner-border spinner-border-sm me-2"></span>Cargando…</td></tr>`;
+
+  try {
+    const params = { page: currentPage, limit: 15, search, category, featured };
+    Object.keys(params).forEach(k => !params[k] && params[k] !== 0 && delete params[k]);
+    const { products, total } = await productsAPI.list(params);
+    document.getElementById("totalBadge").textContent = total;
+
+    if (!products.length) {
+      tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-muted"><i class="bi bi-box-seam fs-3 d-block mb-2"></i>Sin productos encontrados</td></tr>`;
+      document.getElementById("pagination").innerHTML = ""; return;
+    }
+    tbody.innerHTML = products.map(p => `
+      <tr>
+        <td class="text-muted">#${p.id}</td>
+        <td><img src="${p.image_url||'https://via.placeholder.com/44'}" class="product-thumb" onerror="this.src='https://via.placeholder.com/44'"/></td>
+        <td>
+          <span class="fw-semibold">${escHtml(p.name)}</span>
+          ${p.description ? `<br><small class="text-muted">${escHtml(p.description).substring(0,45)}…</small>` : ""}
+        </td>
+        <td><span class="badge bg-light text-dark border">${p.category_name||"—"}</span></td>
+        <td class="fw-bold">$${parseFloat(p.price).toFixed(2)}</td>
+        <td>
+          <span class="badge ${p.stock > 5 ? 'bg-success' : p.stock > 0 ? 'bg-warning text-dark' : 'bg-danger'}">${p.stock}</span>
+        </td>
+        <td class="text-center">
+          ${p.featured ? '<i class="bi bi-star-fill text-warning fs-5" title="Destacado"></i>' : '<i class="bi bi-star text-muted"></i>'}
+        </td>
+        <td class="text-muted small">${p.seller_name||"—"}</td>
+        <td class="text-end">
+          <button class="btn btn-sm btn-outline-primary btn-sm-action me-1" onclick="openEdit(${p.id})"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-outline-danger btn-sm-action" onclick="openDelete(${p.id},'${escHtml(p.name)}')"><i class="bi bi-trash"></i></button>
+        </td>
+      </tr>`).join("");
+
+    buildPagination("pagination", total, 15, currentPage, (pg) => { currentPage = pg; load(); });
+  } catch {}
+}
+
+// ── Validación ──
+function validate() {
+  clearErrors();
+  let valid = true;
+  const name  = document.getElementById("pName").value.trim();
+  const price = parseFloat(document.getElementById("pPrice").value);
+  const stock = parseInt(document.getElementById("pStock").value);
+
+  if (!name || name.length < 2)         { showErr("errName","pName","Nombre obligatorio, mín. 2 caracteres"); valid=false; }
+  if (isNaN(price) || price <= 0)       { showErr("errPrice","pPrice","Precio inválido, debe ser mayor a 0"); valid=false; }
+  if (isNaN(stock) || stock < 0)        { showErr("errStock","pStock","Stock inválido, debe ser ≥ 0"); valid=false; }
+
+  const imgVal = document.getElementById("pImage").value.trim();
+  if (imgVal && !/^https?:\/\/.+/.test(imgVal)) { showErr("errImage","pImage","URL de imagen inválida"); valid=false; }
+
+  return valid;
+}
+function showErr(errId, fldId, msg) {
+  const e = document.getElementById(errId); const f = document.getElementById(fldId);
+  if (e) { e.textContent = msg; e.style.display = "block"; } if (f) f.classList.add("is-invalid");
+}
+function clearErrors() {
+  ["errName","errPrice","errStock","errImage"].forEach(id => {
+    const el = document.getElementById(id); if (el) { el.textContent=""; el.style.display="none"; }
+  });
+  ["pName","pPrice","pStock","pImage"].forEach(id => document.getElementById(id)?.classList.remove("is-invalid"));
+}
+function escHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); }
+
+// ── Abrir crear ──
+document.getElementById("btnNewProd").addEventListener("click", () => {
+  editingId = null; clearErrors();
+  document.getElementById("modalTitle").textContent = "Nuevo Producto";
+  ["prodId","pName","pDesc","pImage"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("pPrice").value = ""; document.getElementById("pStock").value = "0";
+  document.getElementById("pFeatured").checked = false;
+  document.getElementById("pCategory").value = "";
+  document.getElementById("imgPreview").style.display = "none";
+  document.getElementById("descCount").textContent = "0";
+  prodModal.show();
+});
+
+// ── Abrir editar ──
+window.openEdit = async (id) => {
+  editingId = id; clearErrors();
+  try {
+    const p = await productsAPI.get(id);
+    document.getElementById("modalTitle").textContent = "Editar Producto";
+    document.getElementById("prodId").value   = p.id;
+    document.getElementById("pName").value    = p.name;
+    document.getElementById("pPrice").value   = p.price;
+    document.getElementById("pStock").value   = p.stock;
+    document.getElementById("pFeatured").checked = p.featured;
+    document.getElementById("pCategory").value = p.category_id || "";
+    document.getElementById("pDesc").value    = p.description || "";
+    document.getElementById("pImage").value   = p.image_url || "";
+    document.getElementById("descCount").textContent = (p.description||"").length;
+
+    const preview = document.getElementById("imgPreview");
+    if (p.image_url) { preview.src = p.image_url; preview.style.display = "block"; }
+    else preview.style.display = "none";
+
+    prodModal.show();
+  } catch {}
+};
+
+document.getElementById("btnSaveProd").addEventListener("click", async () => {
+  if (!validate()) return;
+  const payload = {
+    name:        document.getElementById("pName").value.trim(),
+    description: document.getElementById("pDesc").value.trim(),
+    price:       document.getElementById("pPrice").value,
+    stock:       document.getElementById("pStock").value,
+    featured:    document.getElementById("pFeatured").checked,
+    category_id: document.getElementById("pCategory").value || null,
+    image_url:   document.getElementById("pImage").value.trim() || null,
+  };
+  const saveText = document.getElementById("saveBtnText"); const spinner = document.getElementById("saveSpinner");
+  saveText.classList.add("d-none"); spinner.classList.remove("d-none");
+  try {
+    if (editingId) { await productsAPI.update(editingId, payload); toast("Producto actualizado", "ok"); }
+    else           { await productsAPI.create(payload); toast("Producto creado", "ok"); }
+    prodModal.hide(); load();
+  } catch {} finally {
+    saveText.classList.remove("d-none"); spinner.classList.add("d-none");
+  }
+});
+
+window.openDelete = (id, name) => {
+  deleteId = id;
+  document.getElementById("deleteProdMsg").textContent = `"${name}" será eliminado permanentemente.`;
+  deleteModal.show();
+};
+document.getElementById("btnConfirmDelete").addEventListener("click", async () => {
+  if (!deleteId) return;
+  try { await productsAPI.delete(deleteId); toast("Producto eliminado", "ok"); deleteModal.hide(); load(); } catch {}
+});
+
+document.getElementById("searchInput").addEventListener("input", debounce(() => { currentPage = 1; load(); }));
+document.getElementById("catFilter").addEventListener("change",      () => { currentPage = 1; load(); });
+document.getElementById("featuredFilter").addEventListener("change", () => { currentPage = 1; load(); });
+document.getElementById("btnRefresh").addEventListener("click", load);
+
+loadCategories().then(load);
+</script>
+</body>
+</html>

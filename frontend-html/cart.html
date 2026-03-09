@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MarketTech — Carrito de Compras</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body>
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark" style="background:linear-gradient(135deg,#1e293b,#2563eb)">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="index.html">Market<span style="color:#f59e0b">Tech</span></a>
+    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="nav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house me-1"></i>Inicio</a></li>
+        <li class="nav-item"><a class="nav-link" href="products.html"><i class="bi bi-grid me-1"></i>Productos</a></li>
+        <li class="nav-item d-none" id="nav-myproducts"><a class="nav-link" href="my-products.html"><i class="bi bi-box me-1"></i>Mis Productos</a></li>
+        <li class="nav-item d-none" id="nav-fav"><a class="nav-link" href="favorites.html"><i class="bi bi-heart me-1"></i>Favoritos</a></li>
+        <li class="nav-item d-none" id="nav-orders"><a class="nav-link" href="orders.html"><i class="bi bi-receipt me-1"></i>Mis Pedidos</a></li>
+      </ul>
+      <ul class="navbar-nav align-items-center gap-1">
+        <li class="nav-item d-none" id="nav-cart-wrap">
+          <a href="cart.html" class="nav-link position-relative">
+            <i class="bi bi-cart3 fs-5"></i>
+            <span id="cart-count" class="badge bg-danger badge-cart" style="display:none">0</span>
+          </a>
+        </li>
+        <li class="nav-item" id="nav-auth"><a class="nav-link" href="login.html"><i class="bi bi-person me-1"></i>Iniciar sesión</a></li>
+        <li class="nav-item d-none"><span class="nav-link text-warning fw-semibold" id="nav-user"></span></li>
+        <li class="nav-item d-none" id="nav-logout"><a href="#" class="btn btn-sm btn-outline-light ms-1"><i class="bi bi-box-arrow-right me-1"></i>Salir</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Header -->
+<div style="background:linear-gradient(135deg,#1e40af,#7c3aed)" class="py-4">
+  <div class="container">
+    <h1 class="text-white fw-bold mb-1"><i class="bi bi-cart3 me-2"></i>Carrito de Compras</h1>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="index.html" class="text-white-50">Inicio</a></li>
+      <li class="breadcrumb-item active text-white">Carrito</li>
+    </ol></nav>
+  </div>
+</div>
+
+<main class="container py-5">
+  <!-- Auth requerido -->
+  <div id="authRequired" class="text-center py-5 d-none">
+    <i class="bi bi-lock fs-1 text-muted"></i>
+    <h4 class="mt-3">Inicia sesión para ver tu carrito</h4>
+    <a href="login.html" class="btn btn-primary mt-2">Iniciar sesión</a>
+  </div>
+
+  <!-- Cargando -->
+  <div id="loadingDiv" class="text-center py-5">
+    <div class="spinner-border text-primary"></div>
+    <p class="mt-2 text-muted">Cargando carrito…</p>
+  </div>
+
+  <!-- Carrito vacío -->
+  <div id="emptyCart" class="text-center py-5 d-none">
+    <i class="bi bi-cart-x" style="font-size:5rem;color:#94a3b8"></i>
+    <h4 class="mt-3 text-muted">Tu carrito está vacío</h4>
+    <p class="text-muted">Explora nuestros productos y agrega lo que te guste</p>
+    <a href="products.html" class="btn btn-primary btn-lg mt-2"><i class="bi bi-grid me-2"></i>Ver productos</a>
+  </div>
+
+  <!-- Contenido del carrito -->
+  <div id="cartContent" class="d-none row g-4">
+    <div class="col-lg-8">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="fw-bold mb-0">Productos (<span id="itemCount">0</span>)</h5>
+        <button id="clearCartBtn" class="btn btn-sm btn-outline-danger">
+          <i class="bi bi-trash me-1"></i>Vaciar carrito
+        </button>
+      </div>
+      <div id="cartItems" class="d-flex flex-column gap-3"></div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="cart-total-box">
+        <h5 class="fw-bold mb-3 border-bottom pb-2">Resumen del pedido</h5>
+        <div class="d-flex justify-content-between text-muted mb-2">
+          <span>Subtotal (<span id="totalItems">0</span> productos)</span>
+          <span id="subtotal">$0.00</span>
+        </div>
+        <div class="d-flex justify-content-between text-muted mb-2">
+          <span>Envío</span><span class="text-success fw-semibold">Gratis</span>
+        </div>
+        <hr/>
+        <div class="d-flex justify-content-between fw-bold fs-5 mb-4">
+          <span>Total</span><span id="total" class="text-primary">$0.00</span>
+        </div>
+        <button id="checkoutBtn" class="btn btn-gradient w-100 py-2 fw-semibold fs-5">
+          <i class="bi bi-credit-card me-2"></i>Finalizar Compra
+        </button>
+        <a href="products.html" class="btn btn-outline-secondary w-100 mt-2">
+          <i class="bi bi-arrow-left me-1"></i>Seguir comprando
+        </a>
+        <div class="mt-3 text-center">
+          <small class="text-muted"><i class="bi bi-shield-check me-1"></i>Pago 100% seguro y encriptado</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Modal de éxito de pedido -->
+<div class="modal fade" id="successModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-body text-center py-5 px-4">
+        <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:80px;height:80px">
+          <i class="bi bi-check-lg text-white" style="font-size:2.5rem"></i>
+        </div>
+        <h3 class="fw-bold">¡Pedido realizado!</h3>
+        <p class="text-muted">Tu orden ha sido creada exitosamente. Puedes seguir el estado en <strong>Mis órdenes</strong>.</p>
+        <div class="d-flex gap-2 justify-content-center mt-3">
+          <a href="orders.html" class="btn btn-primary">Ver mis órdenes</a>
+          <a href="products.html" class="btn btn-outline-secondary">Seguir comprando</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer py-4 mt-auto">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <h5 class="text-white fw-bold mb-0">Market<span class="text-warning">Tech</span></h5>
+      </div>
+      <div class="col-md-6 text-md-end mt-3 mt-md-0">
+        <div class="d-flex gap-2 justify-content-md-end">
+          <a href="https://facebook.com"  target="_blank" class="social-icon"><i class="bi bi-facebook"></i></a>
+          <a href="https://instagram.com" target="_blank" class="social-icon"><i class="bi bi-instagram"></i></a>
+          <a href="https://wa.me/3204567890" target="_blank" class="social-icon" style="background:#25d366"><i class="bi bi-whatsapp"></i></a>
+        </div>
+        <p class="small text-white-50 mt-2 mb-0">&copy; 2026 MarketTech</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div id="toast-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+import { cartAPI, ordersAPI, Auth, syncNavbar, toast, updateCartBadge } from "./js/api.js";
+
+syncNavbar();
+
+if (!Auth.isLoggedIn()) {
+  document.getElementById("loadingDiv").classList.add("d-none");
+  document.getElementById("authRequired").classList.remove("d-none");
+}
+
+let cartData = [];
+
+async function loadCart() {
+  if (!Auth.isLoggedIn()) return;
+  try {
+    cartData = await cartAPI.get();
+    document.getElementById("loadingDiv").classList.add("d-none");
+
+    if (!cartData.length) {
+      document.getElementById("emptyCart").classList.remove("d-none");
+      return;
+    }
+    document.getElementById("cartContent").classList.remove("d-none");
+    renderCart();
+  } catch {
+    document.getElementById("loadingDiv").classList.add("d-none");
+    document.getElementById("emptyCart").classList.remove("d-none");
+  }
+}
+
+function renderCart() {
+  const container = document.getElementById("cartItems");
+  document.getElementById("itemCount").textContent = cartData.length;
+  document.getElementById("totalItems").textContent = cartData.reduce((s,i)=>s+i.quantity,0);
+
+  let subtotal = 0;
+  container.innerHTML = cartData.map(item => {
+    const lineTotal = parseFloat(item.price) * item.quantity;
+    subtotal += lineTotal;
+    return `
+      <div class="card border-0 shadow-sm p-3" data-id="${item.id}">
+        <div class="row align-items-center g-3">
+          <div class="col-auto">
+            <img src="${item.image_url||'https://via.placeholder.com/80'}" class="cart-item-img" alt="${item.name}" onerror="this.src='https://via.placeholder.com/80'"/>
+          </div>
+          <div class="col">
+            <h6 class="fw-bold mb-0">${item.name}</h6>
+            <small class="text-muted">${item.category_name||''}</small>
+            <p class="text-primary fw-semibold mb-0 mt-1">$${parseFloat(item.price).toFixed(2)} c/u</p>
+            <small class="text-${item.stock < item.quantity ? 'danger' : 'success'}">
+              ${item.stock < item.quantity ? `<i class="bi bi-exclamation-triangle"></i> Solo ${item.stock} disponibles` : `<i class="bi bi-check-circle"></i> Disponible`}
+            </small>
+          </div>
+          <div class="col-auto">
+            <div class="d-flex align-items-center gap-2">
+              <button class="qty-btn qty-dec" data-id="${item.id}" data-current="${item.quantity}">−</button>
+              <span class="fw-bold" style="min-width:24px;text-align:center">${item.quantity}</span>
+              <button class="qty-btn qty-inc" data-id="${item.id}" data-current="${item.quantity}" data-max="${item.stock}">+</button>
+            </div>
+          </div>
+          <div class="col-auto text-end">
+            <p class="fw-bold text-primary mb-0">$${lineTotal.toFixed(2)}</p>
+            <button class="btn btn-sm btn-link text-danger p-0 remove-btn" data-id="${item.id}">
+              <i class="bi bi-trash"></i> Eliminar
+            </button>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+
+  document.getElementById("subtotal").textContent = `$${subtotal.toFixed(2)}`;
+  document.getElementById("total").textContent = `$${subtotal.toFixed(2)}`;
+}
+
+// Event delegation for cart actions
+document.getElementById("cartItems").addEventListener("click", async (e) => {
+  const decBtn = e.target.closest(".qty-dec");
+  const incBtn = e.target.closest(".qty-inc");
+  const remBtn = e.target.closest(".remove-btn");
+
+  if (decBtn) {
+    const current = parseInt(decBtn.dataset.current);
+    const id = decBtn.dataset.id;
+    if (current <= 1) { await cartAPI.remove(id); cartData = cartData.filter(i=>i.id!=id); }
+    else { await cartAPI.update(id, current - 1); const item = cartData.find(i=>i.id==id); if(item) item.quantity--; }
+    renderCart(); updateCartBadge();
+    return;
+  }
+  if (incBtn) {
+    const current = parseInt(incBtn.dataset.current);
+    const max = parseInt(incBtn.dataset.max);
+    const id = incBtn.dataset.id;
+    if (current >= max) { toast(`Solo hay ${max} unidades en stock`, "error"); return; }
+    await cartAPI.update(id, current + 1);
+    const item = cartData.find(i=>i.id==id); if(item) item.quantity++;
+    renderCart(); updateCartBadge();
+    return;
+  }
+  if (remBtn) {
+    const id = remBtn.dataset.id;
+    await cartAPI.remove(id);
+    cartData = cartData.filter(i=>i.id!=id);
+    if (!cartData.length) {
+      document.getElementById("cartContent").classList.add("d-none");
+      document.getElementById("emptyCart").classList.remove("d-none");
+    } else { renderCart(); }
+    updateCartBadge();
+    toast("Producto eliminado del carrito", "info");
+  }
+});
+
+document.getElementById("clearCartBtn")?.addEventListener("click", async () => {
+  if (!confirm("¿Vaciar todo el carrito?")) return;
+  await cartAPI.clear();
+  cartData = [];
+  document.getElementById("cartContent").classList.add("d-none");
+  document.getElementById("emptyCart").classList.remove("d-none");
+  updateCartBadge();
+  toast("Carrito vaciado", "info");
+});
+
+document.getElementById("checkoutBtn").addEventListener("click", async () => {
+  const btn = document.getElementById("checkoutBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesando…';
+  try {
+    await ordersAPI.checkout();
+    new bootstrap.Modal(document.getElementById("successModal")).show();
+    updateCartBadge();
+  } catch {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-credit-card me-2"></i>Finalizar Compra';
+  }
+});
+
+loadCart();
+</script>
+</body>
+</html>
